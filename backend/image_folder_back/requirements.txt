@@ -1,0 +1,8 @@
+fastapi[all]
+uvicorn[standard]
+alembic
+sqlalchemy[asyncio]
+pytest
+asyncpg
+ruff
+mypy
