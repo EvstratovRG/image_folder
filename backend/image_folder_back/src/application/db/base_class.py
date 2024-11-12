@@ -1,8 +1,7 @@
 from sqlalchemy.orm.decl_api import DeclarativeBase
-from sqlalchemy.orm import as_declarative, declared_attr
+from sqlalchemy.orm import declared_attr
 
 
-@as_declarative()
 class Base(DeclarativeBase):
     __name__: str  # type: ignore
 
