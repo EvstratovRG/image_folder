@@ -1,8 +1,13 @@
 fastapi[all]
 uvicorn[standard]
+
 alembic
 sqlalchemy[asyncio]
-pytest
 asyncpg
+
+pytest
+pytest_asyncio
+pytest-mock
+
 ruff
 mypy
