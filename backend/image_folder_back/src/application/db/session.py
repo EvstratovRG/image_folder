@@ -9,7 +9,7 @@ sqlalchemy_database_uri = PostgresDsn.build(
     password=settings.PG_PASSWORD,
     port=int(settings.PG_PORT),
     host=settings.PG_HOST,
-    path=settings.PG_DB or '',
+    path=settings.PG_DB or "",
 )
 
 engine = create_async_engine(
@@ -24,4 +24,6 @@ engine = create_async_engine(
         "statement_cache_size": 0,
     },
 )
-SessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+SessionLocal = async_sessionmaker(
+    bind=engine, class_=AsyncSession, expire_on_commit=False
+)

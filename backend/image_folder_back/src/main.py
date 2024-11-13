@@ -11,7 +11,7 @@ from application.loaders import pre_load_all_models
 
 app = FastAPI(
     title=settings.SERVICE_NAME,
-    docs_url=f'{settings.API_BASE_URL}/swagger/',
+    docs_url=f"{settings.API_BASE_URL}/swagger/",
 )
 
 
@@ -39,10 +39,10 @@ app.include_router(api.router, prefix=settings.API_BASE_URL)
 
 pre_load_all_models()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     uvicorn.run(
-        'main:app',
-        loop='uvloop',
+        "main:app",
+        loop="uvloop",
         host=settings.SERVER_HOST,
         port=settings.SERVER_PORT,
         reload=True,

@@ -20,15 +20,15 @@ def pre_load_all_models() -> None:
     Looks like the solution is to import all modules in advance.
     Some details: stackoverflow.com/a/59241485
     """
-    logger.info('Starting preloading models...')
+    logger.info("Starting preloading models...")
     for folder in sorted(next(os.walk(BASE_PATH))[1]):
-        if not folder.startswith('_') and not folder.startswith('.'):
+        if not folder.startswith("_") and not folder.startswith("."):
             for module_path in [
-                BASE_PATH / folder / 'models.py',
+                BASE_PATH / folder / "models.py",
             ]:
                 if os.path.exists(module_path):
-                    module_name = f'{folder}.models'
-                    logger.debug('Loading {}', module_name)
+                    module_name = f"{folder}.models"
+                    logger.debug("Loading {}", module_name)
                     importlib.import_module(module_name)
 
-    logger.info('Preloading models done successully')
+    logger.info("Preloading models done successully")
