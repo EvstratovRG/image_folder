@@ -13,7 +13,7 @@ main_database_uri = PostgresDsn.build(
     password=settings.PG_PASSWORD,
     port=int(settings.PG_PORT),
     host=settings.PG_HOST,
-    path='postgres',
+    path="postgres",
 )
 
 test_database_uri = PostgresDsn.build(
@@ -48,24 +48,31 @@ test_engine = create_engine(
 
 def init() -> None:
     with main_engine.connect() as connection:
-        cursor = connection.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{TEST_DATABASE}'"))
+        cursor = connection.execute(
+            text(f"SELECT 1 FROM pg_database WHERE datname = '{TEST_DATABASE}'")
+        )
         if not cursor.scalar():
             connection.commit()
             connection.execution_options(
-                isolation_level='AUTOCOMMIT',
+                isolation_level="AUTOCOMMIT",
             ).execute(
-                text(f'CREATE DATABASE {TEST_DATABASE} WITH TEMPLATE {settings.PG_DB} OWNER {settings.PG_USER};'),
+                text(
+                    f"CREATE DATABASE {TEST_DATABASE} WITH TEMPLATE {settings.PG_DB} OWNER {settings.PG_USER};"
+                ),
             )
             cursor.close()
 
     with test_engine.connect() as connection:
+        connection.execute(
+            text("TRUNCATE users_user CASCADE;"),
+        )
         connection.commit()
 
 
 def main() -> None:
-    settings.logger.info('Initializing service')
+    settings.logger.info("Initializing service")
     init()
-    settings.logger.info('Service finished initializing')
+    settings.logger.info("Service finished initializing")
 
 
 if __name__ == "__main__":

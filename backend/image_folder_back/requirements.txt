@@ -9,5 +9,10 @@ psycopg2-binary==2.9.10
 
 pytest
 asyncpg
+
+pytest
+pytest_asyncio
+pytest-mock
+
 ruff
 mypy

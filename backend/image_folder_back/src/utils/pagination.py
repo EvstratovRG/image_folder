@@ -10,8 +10,8 @@ from sqlalchemy.sql.selectable import Select
 
 from application import settings
 
-PAGE_SIZE = getattr(settings, 'PAGE_SIZE', 100)
-MAX_PAGE_SIZE = getattr(settings, 'MAX_PAGE_SIZE', 100)
+PAGE_SIZE = getattr(settings, "PAGE_SIZE", 100)
+MAX_PAGE_SIZE = getattr(settings, "MAX_PAGE_SIZE", 100)
 
 
 class MetaPagination(BaseModel):
@@ -38,26 +38,26 @@ class Pagination(BaseModel):
 
 
 async def get_pagination(
-        page_size: Optional[int] = Query(
-            default=PAGE_SIZE,
-            title='Размер страницы',
-            description=f'По умолчанию: {PAGE_SIZE} (не может быть больше {MAX_PAGE_SIZE})',
-            gt=0,
-            le=MAX_PAGE_SIZE
-        ),
-        page_number: Optional[int] = Query(
-            default=1,
-            title='Номер страницы',
-            description='По умолчанию: 1',
-        )
+    page_size: Optional[int] = Query(
+        default=PAGE_SIZE,
+        title="Размер страницы",
+        description=f"По умолчанию: {PAGE_SIZE} (не может быть больше {MAX_PAGE_SIZE})",
+        gt=0,
+        le=MAX_PAGE_SIZE,
+    ),
+    page_number: Optional[int] = Query(
+        default=1,
+        title="Номер страницы",
+        description="По умолчанию: 1",
+    ),
 ) -> Pagination:
     return Pagination(page_size=page_size, page_number=page_number)
 
 
 async def paginate_query(
-        db_session: AsyncSession,
-        query: Select,
-        pagination: Pagination,
+    db_session: AsyncSession,
+    query: Select,
+    pagination: Pagination,
 ) -> Tuple[MetaPagination, List[Any]]:
     page_query = query.limit(pagination.limit).offset(pagination.offset)
     count_query = select(count()).select_from(query.subquery())

@@ -1,13 +1,36 @@
-from pathlib import Path
-
+from .db import engine
 import pytest
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
+from httpx import AsyncClient
 
-DATA_PATH = Path(__file__).parent / 'data'
-
-pytest_plugins = [
-]
+pytest_plugins = ["tests.fixtures.users"]
 
 
 @pytest.fixture(autouse=True)
-def inject_db_session_into_middleware(db_test_session, mocker):
-    mocker.patch('main.SessionLocal', side_effect=lambda: db_test_session)
+def inject_db_session_into_middleware(async_session, mocker):
+    mocker.patch("main.SessionLocal", side_effect=lambda: async_session)
+
+
+@pytest_asyncio.fixture
+async def async_client():
+    from main import app
+
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+
+
+@pytest_asyncio.fixture(scope="function")
+async def async_session() -> AsyncSession:
+    connection = await engine.connect()
+    await connection.begin()
+    await connection.begin_nested()
+    db_session = sessionmaker(
+        bind=connection, class_=AsyncSession, expire_on_commit=False
+    )
+    async with db_session() as session:
+        yield session
+        await session.rollback()
+    await connection.close()
+    await engine.dispose()
