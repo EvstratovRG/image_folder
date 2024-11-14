@@ -14,8 +14,7 @@ def get_bool_env(env_name: str, default: bool) -> bool:
 BASE_DIR = Path(__file__).parent.parent
 env_file_path = BASE_DIR.parent / '.env'
 load_dotenv(env_file_path)
-
-SERVICE_NAME = os.getenv('SERVICE_NAME', 'image_folder_database')
+SERVICE_NAME = os.getenv("SERVICE_NAME", "image_folder")
 
 SERVER_HOST = os.getenv('SERVER_HOST', 'localhost')
 SERVER_PORT = int(os.getenv('SERVER_PORT', 8000))
@@ -31,7 +30,8 @@ LOG_LEVEL = os.getenv('LOG_LEVEL', 'DEBUG')
 DEBUG = get_bool_env('DEBUG', True)
 MAX_PAGE_SIZE = int(os.getenv('MAX_PAGE_SIZE', 100))
 
-POOL_SIZE = int(os.getenv('POOL_SIZE', 600))
-POOL_RECYCLE = int(os.getenv('POOL_RECYCLE', 3600))
-POOL_TIMEOUT = int(os.getenv('POOL_TIMEOUT', 100))
-MAX_OVERFLOW = int(os.getenv('MAX_OVERFLOW', 100))
+POOL_SIZE = int(os.getenv("POOL_SIZE", 600))
+POOL_RECYCLE = int(os.getenv("POOL_RECYCLE", 3600))
+POOL_TIMEOUT = int(os.getenv("POOL_TIMEOUT", 100))
+MAX_OVERFLOW = int(os.getenv("MAX_OVERFLOW", 100))
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", ["*"])
