@@ -27,7 +27,7 @@ async def get_list_users(
 
 
 @router.post(
-    path="/users/", status_code=status.HTTP_200_OK, response_model=UserBaseModel
+    path="/users/", status_code=status.HTTP_201_CREATED, response_model=UserBaseModel
 )
 async def create_user(
     data: CreateUserBaseModel = Body(),

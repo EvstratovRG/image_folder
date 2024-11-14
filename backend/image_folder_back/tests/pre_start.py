@@ -63,6 +63,9 @@ def init() -> None:
             cursor.close()
 
     with test_engine.connect() as connection:
+        connection.execute(
+            text("TRUNCATE users_user CASCADE;"),
+        )
         connection.commit()
 
 
