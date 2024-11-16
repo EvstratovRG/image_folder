@@ -1,5 +1,6 @@
 import pytest_asyncio
 from ..utils import generate_random_string
+from auth.hasher import Hasher
 
 
 @pytest_asyncio.fixture()
@@ -12,7 +13,7 @@ async def create_user(async_session):
             "firstname": generate_random_string(5),
             "lastname": generate_random_string(5),
             "email": generate_random_string(5) + "@mail.ru",
-            "password": generate_random_string(5),
+            "password": Hasher.get_password_hash(generate_random_string(5)),
             "code_phrase": generate_random_string(5),
         }
         data.update(castom_data)

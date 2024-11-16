@@ -4,11 +4,11 @@ from sqlalchemy import Sequence
 
 from application.db.dependency_providers import get_session
 from application.types import UUID_TYPE
+from auth.dependencies import get_current_user
 from users.models import User
 from users.schemas import UserBaseModel, CreateUserBaseModel, UpdateUserBaseModel
 from users.services import (
     update_user_service,
-    get_me_service,
     create_user_service,
     get_users_service,
     get_detail_user_service,
@@ -18,22 +18,13 @@ router = APIRouter()
 
 
 @router.get(
-    path="/users/", status_code=status.HTTP_200_OK, response_model=list[UserBaseModel]
+    path="/users/me/", status_code=status.HTTP_200_OK, response_model=UserBaseModel
 )
-async def get_list_users(
+async def get_me(
     db_session: AsyncSession = Depends(get_session),
-) -> Sequence:
-    return await get_users_service(db_session)
-
-
-@router.post(
-    path="/users/", status_code=status.HTTP_201_CREATED, response_model=UserBaseModel
-)
-async def create_user(
-    data: CreateUserBaseModel = Body(),
-    db_session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
 ) -> User:
-    return await create_user_service(data.model_dump(), db_session)
+    return current_user
 
 
 @router.patch(
@@ -63,10 +54,19 @@ async def get_user_detail(
 
 
 @router.get(
-    path="/users/me/", status_code=status.HTTP_200_OK, response_model=UserBaseModel
+    path="/users/", status_code=status.HTTP_200_OK, response_model=list[UserBaseModel]
 )
-async def get_me(
+async def get_list_users(
     db_session: AsyncSession = Depends(get_session),
-) -> UserBaseModel:
-    # TODO: Добавить после авторизации
-    return await get_me_service(db_session)
+) -> Sequence:
+    return await get_users_service(db_session)
+
+
+@router.post(
+    path="/users/", status_code=status.HTTP_201_CREATED, response_model=UserBaseModel
+)
+async def create_user(
+    data: CreateUserBaseModel = Body(),
+    db_session: AsyncSession = Depends(get_session),
+) -> User:
+    return await create_user_service(data.model_dump(), db_session)

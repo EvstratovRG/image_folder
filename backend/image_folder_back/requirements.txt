@@ -1,6 +1,7 @@
 fastapi[all]
 uvicorn[standard]
 pydantic[email]
+httpx
 
 alembic
 sqlalchemy[asyncio]
@@ -16,3 +17,6 @@ pytest-mock
 
 ruff
 mypy
+
+passlib
+python-jose

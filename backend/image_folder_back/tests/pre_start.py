@@ -2,10 +2,9 @@ from pydantic import PostgresDsn
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
-from application import settings
+from src.application import settings
 
 from .consts import TEST_DATABASE
-
 
 main_database_uri = PostgresDsn.build(
     scheme="postgresql",
