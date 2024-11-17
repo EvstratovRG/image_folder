@@ -14,7 +14,7 @@ from users.services import (
     get_detail_user_service,
 )
 
-router = APIRouter()
+router = APIRouter(tags=['users'])
 
 
 @router.get(

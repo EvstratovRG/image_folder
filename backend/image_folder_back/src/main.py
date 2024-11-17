@@ -39,6 +39,7 @@ app.include_router(api.router, prefix=settings.API_BASE_URL)
 
 pre_load_all_models()
 
+# raise Exception(settings.SERVER_HOST, settings.SERVER_PORT)
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
