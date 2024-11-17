@@ -13,7 +13,7 @@ def get_bool_env(env_name: str, default: bool) -> bool:
 
 BASE_DIR = Path(__file__).parent.parent
 env_file_path = BASE_DIR.parent.parent.parent / ".env"
-# raise Exception(env_file_path)
+
 load_dotenv(env_file_path)
 
 SERVICE_NAME = os.getenv("SERVICE_NAME", "image_folder")
