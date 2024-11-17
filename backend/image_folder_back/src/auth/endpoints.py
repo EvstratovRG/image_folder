@@ -10,7 +10,7 @@ from .enums import TokenTypesEnum
 from users.models import User
 
 
-router = APIRouter()
+router = APIRouter(tags=['auth'])
 
 
 def _create_tokens(
