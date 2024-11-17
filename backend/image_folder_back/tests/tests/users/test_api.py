@@ -1,5 +1,7 @@
 from fastapi import status
 
+from auth.enums import TokenTypesEnum
+from auth.utils import create_token
 from tests.utils import generate_random_string
 
 ENDPOINT_URL_MAPPER = {
@@ -77,5 +79,16 @@ async def test_update_user(
     assert response.json()["email"] == data["email"]
 
 
-# async def test_get_me():  # TODO: добавить после авторизации
-#     ...
+async def test_get_me(
+    create_user,
+    async_client,
+    async_session,
+):
+    user_data = {"username": "Vanko"}
+    user = await create_user(**user_data)
+    access_token = create_token(TokenTypesEnum.access, user.username)
+    url = ENDPOINT_URL_MAPPER.get("me")
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = await async_client.get(url, headers=headers)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["username"] == user_data["username"]
