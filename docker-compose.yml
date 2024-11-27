@@ -1,0 +1,59 @@
+version: '3.3'
+
+volumes:
+  image_folder:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13.0
+    container_name: image_folder_db
+    volumes:
+      - ${DB_DATA}
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    networks:
+      - some_network
+
+  backend:
+    build: ./backend/image_folder_back/
+    container_name: image_folder_backend
+    entrypoint: ["/bin/sh", "-c", "export PYTHONPATH=/app/src && ./scripts/migrate.sh && python3 src/main.py"]
+    command: python src/main.py
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    depends_on:
+      - db
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - some_network
+
+networks:
+  some_network:
+    driver: bridge
+
+#  frontend:
+#    build: ...
+#    volumes:
+#      - ../frontend/:/app/result_build/
+#
+#  nginx:
+#    image: nginx:1.19.3
+#    ports:
+#      - "9000:80"
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+#      - ../frontend/build:/usr/share/nginx/html/
+#      - ../docs/:/usr/share/nginx/html/api/docs/
+#      - static:/static/
+#      - media:/media/
+#    depends_on:
+#      - backend
+#    restart: always
