@@ -13,22 +13,22 @@ from jose import jwt
 
 from .enums import TokenTypesEnum
 
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def get_hashed_password(password: str) -> str:
-    return password_context.hash(password)
+def get_hashed_data(data: str) -> str:
+    return context.hash(data)
 
 
-def verify_password(password: str, hashed_pass: str) -> bool:
-    return password_context.verify(password, hashed_pass)
+def verify_hash(data: str, hashed_data: str) -> bool:
+    return context.verify(data, hashed_data)
 
 
-def hash_user_password(data: dict[str, Any]) -> dict[str, Any]:
-    password = data["password"]
-    hashed_pass = get_hashed_password(password)
-    data["password"] = hashed_pass
-    return data
+def hash_user_data(password: str, code_phrase: str) -> dict[str, Any]:
+    hashed_pass = get_hashed_data(password)
+    hashed_code_phrase = get_hashed_data(code_phrase)
+    hashed_data = {"password": hashed_pass, "code_phrase": hashed_code_phrase}
+    return hashed_data
 
 
 def create_token(

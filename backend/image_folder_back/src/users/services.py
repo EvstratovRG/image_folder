@@ -1,46 +1,41 @@
-from typing import Any
+from typing import AnyStr
 
-from sqlalchemy import Sequence
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from application.types import UUID_TYPE
-from auth.utils import hash_user_password
+from auth.utils import hash_user_data
+from base.service import BaseService
 from users.models import User
-from users.queries import (
-    get_detail_user_query,
-    get_list_users_query,
-    create_user_query,
-)
+from users.repositories import UserRepository
+from users.schemas import CreateUserBaseModel, UpdateUserBaseModel
 
 
-async def get_users_service(db_session: AsyncSession) -> Sequence:
-    query = get_list_users_query()
-    cursor = await db_session.execute(query)
-    return cursor.scalars().all()
+class UserService(BaseService[User]):
+    repository: UserRepository
 
+    def __init__(self, db_session: AsyncSession) -> None:
+        super().__init__(UserRepository(db_session))
 
-async def create_user_service(data: dict[str, Any], db_session: AsyncSession) -> User:
-    hashed_pass_data = hash_user_password(data)
-    data.update(hashed_pass_data)
-    query = create_user_query(data)
-    cursor = await db_session.execute(query)
-    await db_session.commit()
-    instance_id = cursor.scalar_one_or_none()
-    return await get_detail_user_service(user_id=instance_id, db_session=db_session)
+    async def get_exist_by_params(self, *args: AnyStr) -> bool:
+        return await self.repository.get_by_unique_params(*args)
 
+    async def get_by_username(self, username: str) -> User:
+        return await self.repository.get_by_username(username)
 
-async def get_detail_user_service(user_id: UUID_TYPE, db_session: AsyncSession) -> User:
-    query = get_detail_user_query(user_id)
-    cursor = await db_session.execute(query)
-    return cursor.scalars().one_or_none()
+    async def create(self, data: CreateUserBaseModel) -> User:
+        existing_user = await self.repository.get_by_unique_params(
+            data.username, str(data.email)
+        )
+        if existing_user:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Пользователь с именем {data.username} и email {data.email} уже существует!",
+            )
 
+        data_dict = data.model_dump()
+        hashed_pass_data = hash_user_data(data.password, str(data.code_phrase))
+        data_dict.update(hashed_pass_data)
+        return await self.repository.create(data_dict)
 
-async def update_user_service(
-    user_id: UUID_TYPE, data: dict[str, Any], db_session: AsyncSession
-) -> User:
-    user_to_update = await get_detail_user_service(user_id, db_session)
-    filtered_data = {key: value for key, value in data.items() if value is not None}
-    for key, value in filtered_data.items():
-        setattr(user_to_update, key, value)
-    await db_session.commit()
-    return await get_detail_user_service(user_id, db_session)
+    async def update(self, user: User, data: UpdateUserBaseModel) -> User:
+        return await self.repository.update(user, data.model_dump())
