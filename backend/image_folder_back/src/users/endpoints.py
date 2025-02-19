@@ -1,6 +1,7 @@
+from typing import Sequence
+
 from fastapi import APIRouter, status, Depends, Body, Path
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import Sequence
 
 from application.db.dependency_providers import get_session
 from application.types import UUID_TYPE
@@ -53,7 +54,7 @@ async def update_user(
 )
 async def get_list_users(
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
-) -> Sequence:
+) -> Sequence[User]:
     return await service.get_list()
 
 

@@ -1,6 +1,4 @@
-from typing import AnyStr
-
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.utils import hash_user_data
@@ -16,22 +14,30 @@ class UserService(BaseService[User]):
     def __init__(self, db_session: AsyncSession) -> None:
         super().__init__(UserRepository(db_session))
 
-    async def get_exist_by_params(self, *args: AnyStr) -> bool:
-        return await self.repository.get_by_unique_params(*args)
+    async def get_user_by_params(
+        self, username: str | None = None, email: str | None = None
+    ) -> User | None:
+        return await self.repository.get_by_unique_params(username, email)
 
     async def get_by_username(self, username: str) -> User:
         return await self.repository.get_by_username(username)
 
     async def create(self, data: CreateUserBaseModel) -> User:
         existing_user = await self.repository.get_by_unique_params(
-            data.username, str(data.email)
+            data.username,
+            str(data.email),
         )
         if existing_user:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Пользователь с именем {data.username} и email {data.email} уже существует!",
-            )
-
+            if existing_user.email == data.email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Пользователь с email {data.email} уже существует!",
+                )
+            elif existing_user.username != data.username:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Пользователь с именем {data.username} уже существует!",
+                )
         data_dict = data.model_dump()
         hashed_pass_data = hash_user_data(data.password, str(data.code_phrase))
         data_dict.update(hashed_pass_data)

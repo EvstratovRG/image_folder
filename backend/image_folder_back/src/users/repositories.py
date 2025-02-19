@@ -1,7 +1,7 @@
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, or_
 
 from base.repository import BaseRepository
 from users.models import User
@@ -16,10 +16,14 @@ class UserRepository(BaseRepository[User]):
         cursor = await self.session.execute(stmt)
         return cursor.scalars().one_or_none()
 
-    async def get_by_unique_params(self, username: str, email: str) -> bool:
-        stmt = select(User).where(User.username == username, User.email == email)
+    async def get_by_unique_params(
+        self, username: str | None = None, email: str | None = None
+    ) -> User | None:
+        if not username and email:
+            return None
+        stmt = select(User).where(or_(User.username == username, User.email == email))
         cursor = await self.session.execute(stmt)
-        return cursor.scalar() is not None
+        return cursor.scalar_one_or_none()
 
     async def update(self, user: User, data: dict[str, Any]) -> User:
         filtered_data = {key: value for key, value in data.items() if value is not None}
