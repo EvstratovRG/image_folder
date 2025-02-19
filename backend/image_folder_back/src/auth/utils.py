@@ -24,10 +24,12 @@ def verify_hash(data: str, hashed_data: str) -> bool:
     return context.verify(data, hashed_data)
 
 
-def hash_user_data(password: str, code_phrase: str) -> dict[str, Any]:
+def hash_user_data(password: str, code_phrase: str | None = None) -> dict[str, Any]:
     hashed_pass = get_hashed_data(password)
-    hashed_code_phrase = get_hashed_data(code_phrase)
-    hashed_data = {"password": hashed_pass, "code_phrase": hashed_code_phrase}
+    hashed_data = {"password": hashed_pass}
+    if code_phrase:
+        hashed_code_phrase = get_hashed_data(code_phrase)
+        hashed_data["code_phrase"] = hashed_code_phrase
     return hashed_data
 
 

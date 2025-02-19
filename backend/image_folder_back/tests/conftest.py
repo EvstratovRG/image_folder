@@ -1,3 +1,5 @@
+from typing import AsyncGenerator
+
 from .db import engine
 import pytest
 import pytest_asyncio
@@ -31,7 +33,7 @@ async def async_client():
 
 
 @pytest_asyncio.fixture(scope="function")
-async def async_session() -> AsyncSession:
+async def async_session() -> AsyncGenerator[AsyncSession, None]:
     connection = await engine.connect()
     await connection.begin()
     await connection.begin_nested()

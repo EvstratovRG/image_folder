@@ -1,11 +1,16 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.utils import hash_user_data
+from auth.utils import hash_user_data, verify_hash
 from base.service import BaseService
 from users.models import User
 from users.repositories import UserRepository
-from users.schemas import CreateUserBaseModel, UpdateUserBaseModel
+from users.schemas import (
+    CreateUserSchema,
+    UpdateUserSchema,
+    RestorePasswordSchema,
+    SetNewPasswordSchema,
+)
 
 
 class UserService(BaseService[User]):
@@ -19,7 +24,7 @@ class UserService(BaseService[User]):
     ) -> User | None:
         return await self.repository.get_by_unique_params(username, email)
 
-    async def create(self, data: CreateUserBaseModel) -> User:
+    async def create(self, data: CreateUserSchema) -> User:
         existing_user = await self.repository.get_by_unique_params(
             data.username,
             str(data.email),
@@ -36,9 +41,19 @@ class UserService(BaseService[User]):
                     detail=f"Пользователь с именем {data.username} уже существует!",
                 )
         data_dict = data.model_dump()
+        data_dict.pop("confirm_password")
         hashed_pass_data = hash_user_data(data.password, str(data.code_phrase))
         data_dict.update(hashed_pass_data)
         return await self.repository.create(data_dict)
 
-    async def update(self, user: User, data: UpdateUserBaseModel) -> User:
+    async def update(self, user: User, data: UpdateUserSchema) -> User:
         return await self.repository.update(user, data.model_dump())
+
+    @staticmethod
+    async def restore_password(user: User, data: RestorePasswordSchema) -> bool:
+        return verify_hash(data.code_phrase, user.code_phrase)
+
+    @staticmethod
+    async def set_password(user: User, data: SetNewPasswordSchema) -> bool:
+        user.password = hash_user_data(data.password)["password"]
+        return True

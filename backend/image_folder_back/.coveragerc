@@ -1,0 +1,16 @@
+[run]
+branch = True
+source = backend/image_folder_back/src/
+relative_files = True
+omit =
+    main.py
+
+concurrency = thread,greenlet
+
+[report]
+skip_empty = True
+show_missing = True
+exclude_also =
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+fail_under = 80
