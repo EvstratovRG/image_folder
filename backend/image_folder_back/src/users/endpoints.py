@@ -33,27 +33,27 @@ async def get_me(
 
 
 @router.post(
-    path="/{user_id}/restore-password/",
+    path="/{user_id}/reset-password/",
     status_code=status.HTTP_200_OK,
 )
-async def restore_password(
+async def reset_password(
     user: User = Depends(get_user),
     data: RestorePasswordSchema = Body(),
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
 ) -> bool:
-    return await service.restore_password(user, data)
+    return await service.reset_password(user, data)
 
 
 @router.post(
-    path="/{user_id}/set-new-password/",
+    path="/set-new-password/",
     status_code=status.HTTP_200_OK,
 )
 async def set_new_password(
-    user: User = Depends(get_user),
+    current_user: User = Depends(get_current_user),
     data: SetNewPasswordSchema = Body(),
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
 ) -> bool:
-    return await service.set_password(user, data)
+    return await service.set_password(current_user, data.password)
 
 
 @router.get(

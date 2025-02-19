@@ -9,7 +9,6 @@ from users.schemas import (
     CreateUserSchema,
     UpdateUserSchema,
     RestorePasswordSchema,
-    SetNewPasswordSchema,
 )
 
 
@@ -50,10 +49,12 @@ class UserService(BaseService[User]):
         return await self.repository.update(user, data.model_dump())
 
     @staticmethod
-    async def restore_password(user: User, data: RestorePasswordSchema) -> bool:
-        return verify_hash(data.code_phrase, user.code_phrase)
-
-    @staticmethod
-    async def set_password(user: User, data: SetNewPasswordSchema) -> bool:
-        user.password = hash_user_data(data.password)["password"]
+    async def set_password(user: User, password: str) -> bool:
+        user.password = hash_user_data(password)["password"]
         return True
+
+    async def reset_password(self, user: User, data: RestorePasswordSchema) -> bool:
+        is_match_code_phrase = verify_hash(data.code_phrase, user.code_phrase)
+        if not is_match_code_phrase:
+            return False
+        return await self.set_password(user, data.password)
