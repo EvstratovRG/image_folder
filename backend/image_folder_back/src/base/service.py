@@ -16,6 +16,5 @@ class BaseService(Generic[T]):
     async def get_list(self) -> Sequence[T]:
         return await self.repository.get_list()
 
-    async def delete(self, obj: T) -> str:
+    async def delete(self, obj: T) -> None:
         await self.repository.delete(obj)
-        return f"Объект {obj.id} успешно удалён."

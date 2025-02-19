@@ -2,9 +2,8 @@ from fastapi import APIRouter, Depends, status, HTTPException
 
 from application.db.dependency_providers import get_session
 from users.services import UserService
-from .hasher import Hasher
 from .schemas import AuthTokenResponseSchema, AuthLoginSchema, AuthRefreshSchema
-from .utils import create_token, decode_data_from_token
+from .utils import create_token, decode_data_from_token, verify_hash
 from .enums import TokenTypesEnum
 from users.models import User
 
@@ -35,9 +34,10 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Пользователь {payload.username} не найден.",
         )
-    if not Hasher.verify_password(payload.password, user.password):
+    if not verify_hash(payload.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Не верный пароль."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Не верный пароль.",
         )
     return _create_tokens(user)
 
