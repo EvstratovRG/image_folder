@@ -29,7 +29,7 @@ class CreateUserSchema(BaseModel):
             raise ValueError("Пароли не соответствуют!")
         if not re.match(UPPERCASE_WITH_DIGIT_AND_SYMBOL_REGEX, data["password"]):
             raise ValueError(
-                "В пароле должны быть минимум 1 заглавная буква, 1 цифра и 1 символ!"
+                "В пароле должны быть минимум 1 заглавная буква, 1 цифра и 1 символ!",
             )
         return data
 
@@ -55,6 +55,6 @@ class SetNewPasswordSchema(BaseModel):
             raise ValueError("Пароли не соответствуют!")
         if not re.match(UPPERCASE_WITH_DIGIT_AND_SYMBOL_REGEX, data["password"]):
             raise ValueError(
-                "В пароле должны быть минимум 1 заглавная буква, 1 цифра и 1 символ!"
+                "В пароле должны быть минимум 1 заглавная буква, 1 цифра и 1 символ!",
             )
         return data

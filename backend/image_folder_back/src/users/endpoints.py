@@ -20,7 +20,11 @@ from users.schemas import (
 router = APIRouter(tags=["users"], prefix="/users")
 
 
-@router.get(path="/me/", status_code=status.HTTP_200_OK, response_model=UserBaseSchema)
+@router.get(
+    path="/me/",
+    status_code=status.HTTP_200_OK,
+    response_model=UserBaseSchema,
+)
 async def get_me(
     db_session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_user),
@@ -78,7 +82,9 @@ async def update_user(
 
 
 @router.get(
-    path="/", status_code=status.HTTP_200_OK, response_model=list[UserBaseSchema]
+    path="/",
+    status_code=status.HTTP_200_OK,
+    response_model=list[UserBaseSchema],
 )
 async def get_list_users(
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
@@ -87,7 +93,9 @@ async def get_list_users(
 
 
 @router.post(
-    path="/", status_code=status.HTTP_201_CREATED, response_model=UserBaseSchema
+    path="/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserBaseSchema,
 )
 async def create_user(
     data: CreateUserSchema = Body(),

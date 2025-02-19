@@ -35,14 +35,14 @@ class UserService(BaseService[User]):
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Пользователь с email {data.email} уже существует!",
                 )
-            elif existing_user.username != data.username:
+            elif existing_user.username == data.username:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Пользователь с именем {data.username} уже существует!",
                 )
         data_dict = data.model_dump()
         data_dict.pop("confirm_password")
-        hashed_pass_data = hash_user_data(data.password, str(data.code_phrase))
+        hashed_pass_data = hash_user_data(data.password, data.code_phrase)
         data_dict.update(hashed_pass_data)
         return await self.repository.create(data_dict)
 

@@ -36,7 +36,8 @@ async def login(
         )
     if not verify_hash(payload.password, user.password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Не верный пароль."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Не верный пароль.",
         )
     return _create_tokens(user)
 
