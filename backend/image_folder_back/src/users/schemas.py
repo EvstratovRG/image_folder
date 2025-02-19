@@ -16,10 +16,10 @@ class CreateUserBaseModel(BaseModel):
     firstname: str = Field(min_length=3, max_length=100)
     lastname: str = Field(min_length=3, max_length=100)
     email: EmailStr = Field(min_length=3, max_length=100)
-    password: str = Field(min_length=5, max_length=100)  # TODO: хэшировать пароль
+    password: str = Field(min_length=5, max_length=100)
     code_phrase: str = Field(
         min_length=5, max_length=100
-    )  # TODO: хэшировать кодовую фразу
+    )  # TODO: добавить восстановление пароля по кодовой фразе
 
     # TODO: добавить валидацию пароля, чтобы использовались цифры + символы
 
@@ -29,9 +29,5 @@ class UpdateUserBaseModel(BaseModel):
     firstname: str | None = Field(default=None, min_length=3, max_length=100)
     lastname: str | None = Field(default=None, min_length=3, max_length=100)
     email: EmailStr | None = Field(default=None, min_length=3, max_length=100)
-    password: str | None = Field(
-        default=None, min_length=5, max_length=100
-    )  # TODO: хэшировать пароль
-    code_phrase: str | None = Field(
-        default=None, min_length=5, max_length=100
-    )  # TODO: хэшировать кодовую фразу
+    password: str | None = Field(default=None, min_length=5, max_length=100)
+    code_phrase: str | None = Field(default=None, min_length=5, max_length=100)

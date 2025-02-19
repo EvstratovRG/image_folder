@@ -16,9 +16,18 @@ def inject_db_session_into_middleware(async_session, mocker):
 @pytest_asyncio.fixture
 async def async_client():
     from main import app
+    from httpx import __version__
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        yield client
+    if __version__ < "0.28.0":
+        async with AsyncClient(app=app, base_url="http://test") as client:
+            yield client
+    else:
+        from httpx import ASGITransport
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            yield client
 
 
 @pytest_asyncio.fixture(scope="function")

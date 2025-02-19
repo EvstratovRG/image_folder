@@ -1,16 +1,15 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 
 from application.db.dependency_providers import get_session
+from users.services import UserService
 from .hasher import Hasher
 from .schemas import AuthTokenResponseSchema, AuthLoginSchema, AuthRefreshSchema
-from sqlalchemy.ext.asyncio import AsyncSession
-from .services import get_user_by_username
 from .utils import create_token, decode_data_from_token
 from .enums import TokenTypesEnum
 from users.models import User
 
 
-router = APIRouter(tags=['auth'])
+router = APIRouter(tags=["auth"])
 
 
 def _create_tokens(
@@ -28,9 +27,9 @@ def _create_tokens(
 )
 async def login(
     payload: AuthLoginSchema,
-    db_session: AsyncSession = Depends(get_session),
+    service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
 ) -> AuthTokenResponseSchema:
-    user = await get_user_by_username(db_session, payload.username)
+    user = await service.get_user_by_params(payload.username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -50,10 +49,10 @@ async def login(
 )
 async def refresh_tokens(
     payload: AuthRefreshSchema,
-    db_session: AsyncSession = Depends(get_session),
+    service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
 ) -> AuthTokenResponseSchema:
     username = decode_data_from_token(payload.refresh_token, TokenTypesEnum.refresh)
-    user = await get_user_by_username(db_session, username)
+    user = await service.get_user_by_params(username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
