@@ -19,9 +19,6 @@ class UserService(BaseService[User]):
     ) -> User | None:
         return await self.repository.get_by_unique_params(username, email)
 
-    async def get_by_username(self, username: str) -> User:
-        return await self.repository.get_by_username(username)
-
     async def create(self, data: CreateUserBaseModel) -> User:
         existing_user = await self.repository.get_by_unique_params(
             data.username,

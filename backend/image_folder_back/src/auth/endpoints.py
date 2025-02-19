@@ -29,7 +29,7 @@ async def login(
     payload: AuthLoginSchema,
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
 ) -> AuthTokenResponseSchema:
-    user = await service.get_by_username(payload.username)
+    user = await service.get_user_by_params(payload.username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -52,7 +52,7 @@ async def refresh_tokens(
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
 ) -> AuthTokenResponseSchema:
     username = decode_data_from_token(payload.refresh_token, TokenTypesEnum.refresh)
-    user = await service.get_by_username(username)
+    user = await service.get_user_by_params(username)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

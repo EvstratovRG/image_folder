@@ -11,11 +11,6 @@ class UserRepository(BaseRepository[User]):
     def __init__(self, db_session: AsyncSession) -> None:
         super().__init__(db_session, User)
 
-    async def get_by_username(self, username: str) -> User | None:
-        stmt = select(User).where(User.username == username)
-        cursor = await self.session.execute(stmt)
-        return cursor.scalars().one_or_none()
-
     async def get_by_unique_params(
         self, username: str | None = None, email: str | None = None
     ) -> User | None:
