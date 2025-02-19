@@ -2,6 +2,7 @@ import pytest
 from fastapi import status
 
 from auth.enums import TokenTypesEnum
+from auth.exceptions import TokenDoNotSet, NotValidTokenType
 from auth.utils import create_token
 from tests.utils import generate_random_string, generate_random_valid_password
 from users.repositories import UserRepository
@@ -35,8 +36,8 @@ async def test_get_list_users(
 
     assert response.status_code == status.HTTP_200_OK
     response_data = response.json()
-    assert len(response_data) == users_count
-    assert user.username in [user["username"] for user in response_data]
+    assert response_data["meta"]["objects_count"] == users_count
+    assert user.username in [user["username"] for user in response_data["items"]]
 
 
 async def test_get_user_detail(
@@ -74,6 +75,52 @@ async def test_create_user(
     assert response.status_code == status.HTTP_201_CREATED
     assert response.json()["username"] == data["username"]
     assert response.json()["email"] == data["email"]
+
+
+async def test_create_user_already_exists_username(create_user, async_client):
+    username = generate_random_string(5)
+    await create_user(username=username)
+
+    password = generate_random_valid_password(5)
+    data = {
+        "username": username,
+        "firstname": generate_random_string(5),
+        "lastname": generate_random_string(5),
+        "email": generate_random_string(5) + "@mail.ru",
+        "password": password,
+        "confirm_password": password,
+        "code_phrase": generate_random_string(5),
+    }
+
+    url = ENDPOINT_URL_MAPPER["create"]
+    response = await async_client.post(url, json=data)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert (
+        response.json()["detail"] == f"Пользователь с именем {username} уже существует!"
+    )
+
+
+async def test_create_user_already_exists_email(create_user, async_client):
+    email = generate_random_string(5) + "@mail.ru"
+    await create_user(email=email)
+
+    password = generate_random_valid_password(5)
+    data = {
+        "username": generate_random_string(5),
+        "firstname": generate_random_string(5),
+        "lastname": generate_random_string(5),
+        "email": email,
+        "password": password,
+        "confirm_password": password,
+        "code_phrase": generate_random_string(5),
+    }
+
+    url = ENDPOINT_URL_MAPPER["create"]
+    response = await async_client.post(url, json=data)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == f"Пользователь с email {email} уже существует!"
 
 
 async def test_create_user_password_does_not_confirmed(
@@ -149,6 +196,42 @@ async def test_get_me(
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["username"] == user_data["username"]
+
+
+async def test_get_me_user_not_found(
+    async_client,
+    async_session,
+):
+    access_token = create_token(TokenTypesEnum.access, generate_random_string(5))
+    url = ENDPOINT_URL_MAPPER["me"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    response = await async_client.get(url, headers=headers)
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Пользователь не найден."
+
+
+async def test_get_me_not_valid_token_no_bearer(
+    async_client,
+    async_session,
+):
+    access_token = create_token(TokenTypesEnum.access, generate_random_string(5))
+    url = ENDPOINT_URL_MAPPER["me"]
+    headers = {"Authorization": f"{access_token}"}
+
+    with pytest.raises(NotValidTokenType):
+        await async_client.get(url, headers=headers)
+
+
+async def test_get_me_no_token(
+    async_client,
+    async_session,
+):
+    url = ENDPOINT_URL_MAPPER["me"]
+
+    with pytest.raises(TokenDoNotSet):
+        await async_client.get(url)
 
 
 async def test_delete_user(

@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.utils import hash_user_data, verify_hash
+from auth.utils import hash_user_data, verify_hash, decode_data_from_token
 from base.service import BaseService
 from users.models import User
 from users.repositories import UserRepository
@@ -47,6 +47,11 @@ class UserService(BaseService[User]):
 
     async def update(self, user: User, data: UpdateUserSchema) -> User:
         return await self.repository.update(user, data.model_dump())
+
+    async def get_user_by_token(self, token: str) -> User | None:
+        token = token.replace("Bearer ", "")
+        username = decode_data_from_token(token=token)
+        return await self.repository.get_by_unique_params(username=username)
 
     @staticmethod
     async def set_password(user: User, password: str) -> bool:
