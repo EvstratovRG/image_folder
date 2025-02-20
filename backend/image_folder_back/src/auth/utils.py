@@ -1,7 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Union, Any
-
-from pydantic import ValidationError
+from typing import Any
 
 from application.settings import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
