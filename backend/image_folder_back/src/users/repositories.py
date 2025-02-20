@@ -14,7 +14,7 @@ class UserRepository(BaseRepository[User]):
     async def get_by_unique_params(
         self, username: str | None = None, email: str | None = None
     ) -> User | None:
-        if not username and email:
+        if not username and not email:
             return None
         stmt = select(User).where(or_(User.username == username, User.email == email))
         cursor = await self.session.execute(stmt)

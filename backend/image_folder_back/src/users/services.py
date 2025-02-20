@@ -28,13 +28,12 @@ class UserService(BaseService[User]):
             data.username,
             str(data.email),
         )
-        if existing_user:
-            if existing_user.email == data.email:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Пользователь с email {data.email} уже существует!",
-                )
-            elif existing_user.username == data.username:
+        if existing_user and existing_user.email == data.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Пользователь с email {data.email} уже существует!",
+            )
+        elif existing_user and existing_user.username == data.username:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Пользователь с именем {data.username} уже существует!",
