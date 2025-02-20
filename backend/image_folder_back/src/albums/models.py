@@ -121,6 +121,10 @@ class AlbumImagePosition(Base):
     image_id: Mapped[int] = mapped_column(
         ForeignKey("albums_image.id", ondelete="CASCADE"),
     )
+    video_id: Mapped[int] = mapped_column(
+        ForeignKey("albums_video.id", ondelete="CASCADE"),
+    )
+
     position: Mapped[int | None] = mapped_column(nullable=True)
 
     album: Mapped["Album"] = relationship("Album", back_populates="image_positions")
