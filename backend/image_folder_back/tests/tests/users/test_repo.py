@@ -1,5 +1,3 @@
-from typing import Callable
-
 from users.repositories import UserRepository
 from base.repository import BaseRepository
 from users.models import User

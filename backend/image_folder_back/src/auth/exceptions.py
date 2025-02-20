@@ -12,4 +12,3 @@ class TokenDoNotSet(Exception):
 
 class TokenDecodeError(Exception):
     pass
-
