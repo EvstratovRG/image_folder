@@ -13,8 +13,8 @@ ENDPOINT_URL_MAPPER = {
     "update": "/api/image_folder/users/{}/",
     "me": "/api/image_folder/users/me/",
     "delete": "/api/image_folder/users/",
-    "restore_password": "/api/image_folder/users/{}/restore-password/",
-    "set_password": "/api/image_folder/users/{}/set-new-password/",
+    "reset_password": "/api/image_folder/users/{}/reset-password/",
+    "set_password": "/api/image_folder/users/set-new-password/",
 }
 
 
@@ -169,32 +169,63 @@ async def test_delete_user(
 
 
 @pytest.mark.parametrize(
-    "code_phrase, is_valid, expected_response",
+    "password, valid_confirm_password, code_phrase, is_valid_code_phrase, expected_status_code, expected_response",
     [
-        (generate_random_string(5), True, True),
-        (generate_random_string(5), False, False),
+        (
+            generate_random_valid_password(5),
+            True,
+            generate_random_string(5),
+            True,
+            status.HTTP_200_OK,
+            True,
+        ),
+        (
+            generate_random_valid_password(5),
+            False,
+            generate_random_string(5),
+            False,
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            False,
+        ),
+        (
+            generate_random_valid_password(5),
+            True,
+            generate_random_string(5),
+            False,
+            status.HTTP_200_OK,
+            False,
+        ),
     ],
 )
-async def test_restore_password(
+async def test_reset_password(
+    password,
+    valid_confirm_password,
     code_phrase,
-    is_valid,
+    is_valid_code_phrase,
+    expected_status_code,
     expected_response,
     create_user,
     async_client,
     async_session,
 ):
-    data = {}
-    if is_valid:
-        data["code_phrase"] = code_phrase
+    data = {"password": password, "code_phrase": code_phrase}
     user = await create_user(**data)
-    if not is_valid:
-        data["code_phrase"] = "qweqwe"
-    url = ENDPOINT_URL_MAPPER["restore_password"].format(str(user.id))
+    if valid_confirm_password:
+        data["confirm_password"] = password
+        data["code_phrase"] = code_phrase
+    else:
+        data["confirm_password"] = generate_random_valid_password(5)
+        data["code_phrase"] = code_phrase
+    if not is_valid_code_phrase:
+        data["code_phrase"] = "qweqweewq"
+    url = ENDPOINT_URL_MAPPER["reset_password"].format(str(user.id))
 
     response = await async_client.post(url, json=data)
 
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == expected_response
+    assert response.status_code == expected_status_code
+
+    if is_valid_code_phrase:
+        assert response.json() == expected_response
 
 
 @pytest.mark.parametrize(
@@ -222,8 +253,10 @@ async def test_set_new_password(
         data["confirm_password"] = password
     else:
         data["confirm_password"] = generate_random_valid_password(5)
-    url = ENDPOINT_URL_MAPPER["set_password"].format(str(user.id))
+    url = ENDPOINT_URL_MAPPER["set_password"]
+    access_token = create_token(TokenTypesEnum.access, user.username)
+    headers = {"Authorization": f"Bearer {access_token}"}
 
-    response = await async_client.post(url, json=data)
+    response = await async_client.post(url, json=data, headers=headers)
 
     assert response.status_code == expected_status_code
