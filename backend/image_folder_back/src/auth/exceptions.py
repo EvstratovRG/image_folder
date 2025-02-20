@@ -8,3 +8,8 @@ class NotValidTokenType(Exception):
 
 class TokenDoNotSet(Exception):
     pass
+
+
+class TokenDecodeError(Exception):
+    pass
+

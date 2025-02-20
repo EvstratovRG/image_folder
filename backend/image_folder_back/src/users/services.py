@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.utils import hash_user_data, verify_hash
+from auth.utils import hash_user_data, verify_hash, decode_data_from_token
 from base.service import BaseService
 from users.models import User
 from users.repositories import UserRepository
@@ -28,13 +28,12 @@ class UserService(BaseService[User]):
             data.username,
             str(data.email),
         )
-        if existing_user:
-            if existing_user.email == data.email:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Пользователь с email {data.email} уже существует!",
-                )
-            elif existing_user.username == data.username:
+        if existing_user and existing_user.email == data.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Пользователь с email {data.email} уже существует!",
+            )
+        elif existing_user and existing_user.username == data.username:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Пользователь с именем {data.username} уже существует!",
@@ -47,6 +46,11 @@ class UserService(BaseService[User]):
 
     async def update(self, user: User, data: UpdateUserSchema) -> User:
         return await self.repository.update(user, data.model_dump())
+
+    async def get_user_by_token(self, token: str) -> User | None:
+        token = token.replace("Bearer ", "")
+        username = decode_data_from_token(token=token)
+        return await self.repository.get_by_unique_params(username=username)
 
     @staticmethod
     async def set_password(user: User, password: str) -> bool:

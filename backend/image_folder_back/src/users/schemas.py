@@ -1,6 +1,6 @@
 import re
 
-from pydantic import BaseModel, Field, EmailStr, model_validator
+from pydantic import BaseModel, Field, EmailStr, model_validator, ConfigDict
 
 from application.types import UUID_TYPE
 from utils.consts import (
@@ -10,6 +10,7 @@ from utils.consts import (
     MIN_PASSWORD_LENGTH,
     MAX_PASSWORD_LENGTH,
 )
+from utils.pagination import MetaPagination
 
 
 class UserBaseSchema(BaseModel):
@@ -18,6 +19,13 @@ class UserBaseSchema(BaseModel):
     firstname: str
     lastname: str
     email: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserListSchema(BaseModel):
+    items: list[UserBaseSchema]
+    meta: MetaPagination
 
 
 class BasePasswordSchema(BaseModel):

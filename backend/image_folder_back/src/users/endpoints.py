@@ -1,7 +1,4 @@
-from typing import Sequence
-
 from fastapi import APIRouter, status, Depends, Body, Path
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from application.db.dependency_providers import get_session
 from application.types import UUID_TYPE
@@ -15,7 +12,9 @@ from users.schemas import (
     UpdateUserSchema,
     RestorePasswordSchema,
     SetNewPasswordSchema,
+    UserListSchema,
 )
+from utils.pagination import Pagination, get_pagination
 
 router = APIRouter(tags=["users"], prefix="/users")
 
@@ -25,10 +24,7 @@ router = APIRouter(tags=["users"], prefix="/users")
     status_code=status.HTTP_200_OK,
     response_model=UserBaseSchema,
 )
-async def get_me(
-    db_session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(get_current_user),
-) -> User:
+async def get_me(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
@@ -84,12 +80,17 @@ async def update_user(
 @router.get(
     path="/",
     status_code=status.HTTP_200_OK,
-    response_model=list[UserBaseSchema],
+    response_model=UserListSchema,
 )
 async def get_list_users(
+    pagination: Pagination = Depends(get_pagination),
     service: UserService = Depends(lambda db=Depends(get_session): UserService(db)),
-) -> Sequence[User]:
-    return await service.get_list()
+) -> UserListSchema:
+    meta, result = await service.get_list(pagination)
+    return UserListSchema(
+        items=[UserBaseSchema.model_validate(user) for user in result],
+        meta=meta,
+    )
 
 
 @router.post(

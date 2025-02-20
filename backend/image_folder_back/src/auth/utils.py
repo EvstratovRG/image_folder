@@ -1,5 +1,8 @@
 from datetime import datetime, timedelta
 from typing import Union, Any
+
+from pydantic import ValidationError
+
 from application.settings import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_MINUTES,
@@ -9,9 +12,10 @@ from application.settings import (
 )
 
 from passlib.context import CryptContext
-from jose import jwt
+from jose import jwt, JWTError
 
 from .enums import TokenTypesEnum
+from .exceptions import TokenDecodeError
 
 context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -35,7 +39,7 @@ def hash_user_data(password: str, code_phrase: str | None = None) -> dict[str, A
 
 def create_token(
     token_type: TokenTypesEnum,
-    subject: Union[str, Any],
+    subject: str,
 ) -> str:
     expires_delta = datetime.utcnow() + timedelta(
         minutes=int(
@@ -45,7 +49,7 @@ def create_token(
         )
     )
 
-    to_encode = {"exp": expires_delta, "sub": str(subject)}
+    to_encode = {"exp": expires_delta, "sub": subject}
     encoded_jwt = jwt.encode(
         to_encode,
         JWT_SECRET_KEY
@@ -60,12 +64,12 @@ def decode_data_from_token(
     token: str,
     token_type: TokenTypesEnum = TokenTypesEnum.access,
 ) -> str:
-    decoded_jwt = jwt.decode(
-        token,
-        JWT_REFRESH_SECRET_KEY if token_type.refresh else JWT_SECRET_KEY,
-        ALGORITHM,
-    )
-    username = decoded_jwt.get("sub")
-    if not username:
-        raise Exception("Не валидный токен.")
-    return username
+    try:
+        decoded_jwt = jwt.decode(
+            token,
+            JWT_REFRESH_SECRET_KEY if token_type.refresh else JWT_SECRET_KEY,
+            ALGORITHM,
+        )
+    except JWTError as e:
+        raise TokenDecodeError(e)
+    return decoded_jwt.get("sub")

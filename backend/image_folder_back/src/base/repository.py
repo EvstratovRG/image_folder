@@ -1,9 +1,10 @@
-from typing import TypeVar, Generic, Sequence, Any, cast
+from typing import TypeVar, Generic, Any, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
 from application.db.base_class import Base
 from application.types import UUID_TYPE
+from utils.pagination import Pagination, paginate_query, MetaPagination
 
 T = TypeVar("T", bound=Base)
 
@@ -18,10 +19,9 @@ class BaseRepository(Generic[T]):
         cursor = await self.session.execute(stmt)
         return cursor.scalars().one_or_none()
 
-    async def get_list(self) -> Sequence[T]:
+    async def get_list(self, pagination: Pagination) -> tuple[MetaPagination, list[T]]:
         stmt = select(self.model).order_by(self.model.id)
-        cursor = await self.session.execute(stmt)
-        return cursor.scalars().all()
+        return await paginate_query(self.session, stmt, pagination)
 
     async def create(self, obj_data: dict[str, Any]) -> T:
         obj = self.model(**obj_data)
