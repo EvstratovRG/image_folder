@@ -1,41 +1,51 @@
-from typing import TypeVar, Generic, Any, cast
+from typing import Any, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 
-from application.db.base_class import Base
-from application.types import UUID_TYPE
+from application.types import UUID_TYPE, Model
 from utils.pagination import Pagination, paginate_query, MetaPagination
 
-T = TypeVar("T", bound=Base)
 
-
-class BaseRepository(Generic[T]):
-    def __init__(self, db_session: AsyncSession, model: type[T]) -> None:
+class BaseRepository:
+    def __init__(self, db_session: AsyncSession, model: type[Model]) -> None:
         self.session = db_session
         self.model = model
 
-    async def get_by_id(self, obj_id: UUID_TYPE | int) -> T | None:
+    async def is_object_author(self, obj_id: int, author_id: UUID_TYPE) -> bool:
+        stmt = select(self.model).where(
+            self.model.id == obj_id, self.model.author_id == author_id
+        )
+        cursor = await self.session.execute(stmt)
+        return cursor.scalar_one_or_none() is not None
+
+    async def get_by_id(self, obj_id: UUID_TYPE | int) -> Model | None:
         stmt = select(self.model).where(self.model.id == obj_id)
         cursor = await self.session.execute(stmt)
         return cursor.scalars().one_or_none()
 
-    async def get_list(self, pagination: Pagination) -> tuple[MetaPagination, list[T]]:
+    async def get_list(
+        self,
+        pagination: Pagination | None = None,
+    ) -> tuple[MetaPagination, list[Model]] | list[Model]:
         stmt = select(self.model).order_by(self.model.id)
-        return await paginate_query(self.session, stmt, pagination)
+        if pagination:
+            return await paginate_query(self.session, stmt, pagination)
+        cursor = await self.session.execute(stmt)
+        return list(cursor.scalars().all())
 
-    async def create(self, obj_data: dict[str, Any]) -> T:
+    async def create(self, obj_data: dict[str, Any]) -> Model:
         obj = self.model(**obj_data)
         self.session.add(obj)
         await self.session.commit()
         await self.session.refresh(obj)
         return obj
 
-    async def update(self, obj_id: UUID_TYPE | int, data: dict[str, Any]) -> T:
+    async def update(self, obj_id: UUID_TYPE | int, data: dict[str, Any]) -> Model:
         stmt = update(self.model).where(self.model.id == obj_id).values(**data)
         await self.session.execute(stmt)
         await self.session.commit()
-        return await cast(T, self.get_by_id(obj_id))
+        return await cast(Model, self.get_by_id(obj_id))
 
-    async def delete(self, obj: T) -> None:
+    async def delete(self, obj: Model) -> None:
         await self.session.delete(obj)
         await self.session.commit()

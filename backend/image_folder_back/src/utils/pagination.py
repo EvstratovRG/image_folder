@@ -1,17 +1,15 @@
 import math
 from fastapi import Query
 from pydantic import BaseModel
-from typing import cast, TypeVar
+from typing import cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.sql.functions import count
 from sqlalchemy.sql.selectable import Select
 
-from application.db.base_class import Base
+from application.types import Model
 from application.settings import MAX_PAGE_SIZE, PAGE_SIZE
-
-T = TypeVar("T", bound=Base)
 
 
 class MetaPagination(BaseModel):
@@ -60,7 +58,7 @@ async def paginate_query(
     db_session: AsyncSession,
     query: Select,
     pagination: Pagination,
-) -> tuple[MetaPagination, list[T]]:
+) -> tuple[MetaPagination, list[Model]]:
     page_query = query.limit(pagination.limit).offset(pagination.offset)
     count_query = select(count()).select_from(query.subquery())
     page_cursor = await db_session.execute(page_query)

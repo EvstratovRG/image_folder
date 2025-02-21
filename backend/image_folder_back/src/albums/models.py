@@ -4,7 +4,7 @@ from datetime import datetime
 from application.db.base_class import Base
 
 from sqlalchemy.orm import relationship, mapped_column, Mapped
-from sqlalchemy import String, DateTime, ForeignKey, Index
+from sqlalchemy import String, DateTime, ForeignKey, Index, UniqueConstraint
 
 from users.models import User
 from utils.datetime import get_utc_now
@@ -14,17 +14,18 @@ class AlbumCategory(Base):
     __tablename__ = "albums_album_category"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True, unique=True)
-    title: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
     author_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users_user.id", ondelete="CASCADE"),
     )
 
-    author: Mapped["User"] = relationship("User", back_populates="album_categories")
+    author: Mapped["User"] = relationship("User", backref="album_categories")
     albums: Mapped[list["Album"]] = relationship(
         "Album",
         back_populates="category",
-        cascade="all, delete-orphan",
     )
+
+    __table_args__ = (UniqueConstraint("author_id", "title"),)
 
 
 class Album(Base):
@@ -57,21 +58,25 @@ class Album(Base):
         nullable=True,
     )
 
-    author: Mapped["User"] = relationship("User", back_populates="albums")
+    author: Mapped["User"] = relationship("User", backref="albums")
     category: Mapped["AlbumCategory"] = relationship(
         "AlbumCategory",
-        back_populates="albums",
     )
     images: Mapped[list["Image"]] = relationship(
         "Image",
         back_populates="album",
-        cascade="all, delete-orphan",
+        cascade="delete",
+        uselist=True,
+        foreign_keys="Image.album_id",
     )
     videos: Mapped[list["Video"]] = relationship(
         "Video",
         back_populates="album",
-        cascade="all, delete-orphan",
+        cascade="delete",
+        uselist=True,
+        foreign_keys="Video.album_id",
     )
+    cover_image: Mapped["Image"] = relationship("Image", foreign_keys=[cover_id])
 
     __table_args__ = (
         Index("ix_album_category", "category_id"),
@@ -92,7 +97,9 @@ class Image(Base):
         ForeignKey("albums_album.id", ondelete="CASCADE")
     )
 
-    album: Mapped["Album"] = relationship("Album", back_populates="images")
+    album: Mapped["Album"] = relationship(
+        "Album", back_populates="images", foreign_keys=[album_id]
+    )
 
 
 class Video(Base):
@@ -108,7 +115,9 @@ class Video(Base):
         ForeignKey("albums_album.id", ondelete="CASCADE")
     )
 
-    album: Mapped["Album"] = relationship("Album", back_populates="videos")
+    album: Mapped["Album"] = relationship(
+        "Album", back_populates="videos", foreign_keys=[album_id]
+    )
 
 
 class AlbumImagePosition(Base):
@@ -127,5 +136,5 @@ class AlbumImagePosition(Base):
 
     position: Mapped[int | None] = mapped_column(nullable=True)
 
-    album: Mapped["Album"] = relationship("Album", back_populates="image_positions")
-    image: Mapped["Image"] = relationship("Image", back_populates="album_positions")
+    album: Mapped["Album"] = relationship("Album", backref="image_positions")
+    image: Mapped["Image"] = relationship("Image", backref="album_positions")
